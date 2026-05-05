@@ -27,10 +27,10 @@ local PriceList = {
 }
 
 local IconMoneyList = {
-    "7483275955022154623_86", "7483275955022154623_101", "7483275955022154623_119", 
-    "7483275955022154623_120", "7483275955022154623_87", "7483275955022154623_88", 
-    "7483275955022154623_102", "7483275955022154623_121", "7483275955022154623_122", 
-    "7483275955022154623_89", "7483275955022154623_90", "7483275955022154623_91", 
+    "7483275955022154623_86", "7483275955022154623_101", "7483275955022154623_119",
+    "7483275955022154623_120", "7483275955022154623_87", "7483275955022154623_88",
+    "7483275955022154623_102", "7483275955022154623_121", "7483275955022154623_122",
+    "7483275955022154623_89", "7483275955022154623_90", "7483275955022154623_91",
     "7483275955022154623_92","7483275955022154623_100", "7483275955022154623_123"
 } -- Icon hiển thị trên gói
 
@@ -46,21 +46,39 @@ local IconMoneyByMap = {
     [[8_1062292351_1776178950]], -- Khối lam ngọc
 }
 
+local OpenTabByMoneyType = {
+    "7483275955022154623_63",
+    "7483275955022154623_64",
+    "7483275955022154623_68"
+}
+local MoneyByMapCard = {
+    "7483275955022154623_61",
+    "7483275955022154623_62",
+    "7483275955022154623_67"
+}
+
 local CloseThisUI = "7483275955022154623_78"
 local MainElement = "7483275955022154623_69"
 local UIID = "7483275955022154623"
 
 local PlayerCurrentTab = {} -- Biến riêng lưu tab hiện tại
 
+local KeyStorageMoneyByMap = {
+    "GrassBlocks",
+    "GoldenBlocks",
+    "DiamondBlocks"
+}
+
 local ConfigData = {
     [TabList[1]] = { -- Tab Khối Nguyên Sinh
         prices = {"20", "40", "90"},
         counts = {"1000", "2000", "5000"},
-        moneyByMapInShop = {4097, 4098, 4099},      -- Itemid thực tế trong map
+        moneyByMapInShop = {4097, 4098, 4099},
         moneyByMapName = "Khối Nguyên Sinh",
         moneyByGameName = "Đậu mini",
-        currencyIcon = IconMoneyByGame[3], -- Đậu mini (Xanh lá)
-        mapItemIcon = IconMoneyByMap[1]    -- Đường dẫn ảnh Khối Nguyên Sinh
+        currencyIcon = IconMoneyByGame[3],
+        mapItemIcon = IconMoneyByMap[1],
+        storageKey = KeyStorageMoneyByMap[1]
     },
     [TabList[2]] = { -- Tab Khối Hổ Phách
         prices = {"30", "60", "130"},
@@ -68,8 +86,9 @@ local ConfigData = {
         moneyByMapInShop = {4100, 4101, 4102},
         moneyByMapName = "Khối Hổ Phách",
         moneyByGameName = "Điểm mini",
-        currencyIcon = IconMoneyByGame[2], -- Điểm mini (Xanh dương)
-        mapItemIcon = IconMoneyByMap[2]    -- Đường dẫn ảnh Khối Hổ Phách
+        currencyIcon = IconMoneyByGame[2],
+        mapItemIcon = IconMoneyByMap[2],
+        storageKey = KeyStorageMoneyByMap[2]
     },
     [TabList[3]] = { -- Tab Khối Lam Ngọc
         prices = {"50", "100", "250"},
@@ -77,8 +96,9 @@ local ConfigData = {
         moneyByMapInShop = {4103, 4105, 4106},
         moneyByMapName = "Khối Lam Ngọc",
         moneyByGameName = "Xu mini",
-        currencyIcon = IconMoneyByGame[1], -- Xu mini (Vàng)
-        mapItemIcon = IconMoneyByMap[3]    -- Đường dẫn ảnh Khối Lam Ngọc
+        currencyIcon = IconMoneyByGame[1],
+        mapItemIcon = IconMoneyByMap[3],
+        storageKey = KeyStorageMoneyByMap[3]
     }
 }
 
@@ -99,10 +119,11 @@ local function updateUIByTab(playerid, tabElementID)
     end
 end
 
--- Xử lý sự kiện Click
-local function OnButtonClick(event)
+-- Xử lý sự kiện hỗ trợ
+local function helperEvent(event)
     local playerid = event.eventobjid
     local elementid = event.uielement
+
     -- Đóng giao diện
     if elementid == CloseThisUI then
         Customui:hideElement(playerid, UIID, MainElement)
@@ -117,7 +138,16 @@ local function OnButtonClick(event)
         end
     end
 
-    -- Xử lý Mua Gói
+    -- Click nút mở nạp
+    for i, openID in ipairs(OpenTabByMoneyType) do
+        if elementid == openID then
+            updateUIByTab(event.eventobjid, TabList[i])
+            Customui:showElement(playerid, UIID, MainElement)
+            return
+        end
+    end
+
+    -- Click vào gói
     for i, pkgID in ipairs(PackageList) do
         if elementid == pkgID then
             local currentTab = PlayerCurrentTab[playerid] or TabList[1]
@@ -130,30 +160,46 @@ local function OnButtonClick(event)
     end
 end
 
+-- Cập nhật hiển thị
+local function updateDisplayMoneyCard(playerid)
+    for i = 1, #MoneyByMapCard do
+        local _, value = VarLib2:getPlayerVarByName(playerid, VARTYPE.NUMBER, KeyStorageMoneyByMap[i])
+        Customui:setText(playerid, UIID, MoneyByMapCard[i], value)
+    end
+end
+
+
+-- Xử lý khi thanh toán thành công
 -- Xử lý khi thanh toán thành công
 local function transferMoneyByMapToPlayer(event)
     local playerid = event.eventobjid
     local itemid = event.itemid
-    local _, itemName = Item:getItemName(itemid)
 
-    -- Duyệt qua ConfigData để tìm xem itemid này tương ứng với gói nào
     for tabID, data in pairs(ConfigData) do
         for i, configItemID in ipairs(data.moneyByMapInShop) do
             if configItemID == itemid then
                 local count = tonumber(data.counts[i])
                 local price = tonumber(data.prices[i])
 
-                Chat:sendSystemMsg("Đã nạp thành công " .. count .. " " .. data.moneyByMapName .. " vào tài khoản của bạn!", playerid)
-                Chat:sendSystemMsg("Cảm ơn bạn ủng hộ " .. price .. " " .. data.moneyByGameName .. "!", playerid)
+                local varName = data.storageKey
+                local _, value = VarLib2:getPlayerVarByName(playerid, VARTYPE.NUMBER, varName)
+                if not value then value = 0 end
+
+                value = value + count
+                VarLib2:setPlayerVarByName(playerid, VARTYPE.NUMBER, varName, value)
+                updateDisplayMoneyCard(playerid)
+                Chat:sendSystemMsg("#GĐã nạp thành công " .. count .. " " .. data.moneyByMapName, playerid)
+                Chat:sendSystemMsg("#YThanh toán: " .. price .. " " .. data.moneyByGameName, playerid)
                 return
             end
         end
     end
 end
 
--- Đăng ký sự kiện
-ScriptSupportEvent:registerEvent("UI.Button.Click", OnButtonClick)
-ScriptSupportEvent:registerEvent("Developer.BuyItem", transferMoneyByMapToPlayer)
-ScriptSupportEvent:registerEvent("Game.AnyPlayer.EnterGame", function(event)
+local function initData(event)
     updateUIByTab(event.eventobjid, TabList[1])
-end)
+    updateDisplayMoneyCard(event.eventobjid)
+end
+ScriptSupportEvent:registerEvent("UI.Button.Click", helperEvent)
+ScriptSupportEvent:registerEvent("Developer.BuyItem", transferMoneyByMapToPlayer)
+ScriptSupportEvent:registerEvent("Game.AnyPlayer.EnterGame", initData)
