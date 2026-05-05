@@ -1,205 +1,168 @@
-local TabList = {
-    "7483275955022154623_75", -- Nạp mua khối nguyên sinh
-    "7483275955022154623_76", -- Nạp mua khối hổ phách
-    "7483275955022154623_77", -- Nạp mua khối lam ngọc
-}
+-- 1. CONFIGURATION & LOOKUP TABLES
+local UIID = "7483275955022154623"
+local MainElement = UIID .. "_69"
+local CloseThisUI = UIID .. "_78"
 
-local PackageList = {
-    "7483275955022154623_72", -- Gói 1
-    "7483275955022154623_73", -- Gói 2
-    "7483275955022154623_70", -- Gói 3
-}
+local TabList = { UIID.."_75", UIID.."_76", UIID.."_77" }
+local PackageList = { UIID.."_72", UIID.."_73", UIID.."_70" }
+local MoneyTypeList = { UIID.."_107", UIID.."_108", UIID.."_109" }
+local ReciveItemCountList = { UIID.."_103", UIID.."_104", UIID.."_105" }
+local PriceList = { UIID.."_111", UIID.."_112", UIID.."_113" }
 
-local MoneyTypeList = {
-    "7483275955022154623_107", -- Icon hiển thị loại tiền gói 1
-    "7483275955022154623_108", -- Icon hiển thị loại tiền gói 2
-    "7483275955022154623_109",  -- Icon hiển thị loại tiền gói 3
+local OpenBtnToTabIndex = {
+    [UIID.."_63"] = 1,
+    [UIID.."_64"] = 2,
+    [UIID.."_68"] = 3
 }
-local ReciveItemCountList = {
-    "7483275955022154623_103", -- Số lượng vật phẩm nhận được gói 1
-    "7483275955022154623_104", -- Số lượng vật phẩm nhận được gói 2
-    "7483275955022154623_105", -- Số lượng vật phẩm nhận được gói 3
-}
-local PriceList = {
-    "7483275955022154623_111", -- Giá gói 1
-    "7483275955022154623_112", -- Giá gói 2
-    "7483275955022154623_113",  -- Giá gói 3
-}
-
 local IconMoneyList = {
     "7483275955022154623_86", "7483275955022154623_101", "7483275955022154623_119",
     "7483275955022154623_120", "7483275955022154623_87", "7483275955022154623_88",
     "7483275955022154623_102", "7483275955022154623_121", "7483275955022154623_122",
     "7483275955022154623_89", "7483275955022154623_90", "7483275955022154623_91",
     "7483275955022154623_92","7483275955022154623_100", "7483275955022154623_123"
+
 } -- Icon hiển thị trên gói
 
-local IconMoneyByGame = {
-    [[8_1062292351_1777619810]], -- Xu mini
-    [[8_1062292351_1777619814]], -- Điểm mini
-    [[8_1062292351_1777621812]], -- Đậu mini
-}
-
-local IconMoneyByMap = {
-    [[8_1062292351_1776178934]], -- Khối nguyên sinh
-    [[8_1062292351_1776178946]], -- Khối hổ phách
-    [[8_1062292351_1776178950]], -- Khối lam ngọc
-}
-
-local OpenTabByMoneyType = {
-    "7483275955022154623_63",
-    "7483275955022154623_64",
-    "7483275955022154623_68"
-}
-local MoneyByMapCard = {
-    "7483275955022154623_61",
-    "7483275955022154623_62",
-    "7483275955022154623_67"
-}
-
-local CloseThisUI = "7483275955022154623_78"
-local MainElement = "7483275955022154623_69"
-local UIID = "7483275955022154623"
-
-local PlayerCurrentTab = {} -- Biến riêng lưu tab hiện tại
-
-local KeyStorageMoneyByMap = {
-    "GrassBlocks",
-    "GoldenBlocks",
-    "DiamondBlocks"
-}
+local MoneyByMapCard = { UIID.."_61", UIID.."_62", UIID.."_67" }
+local KeyStorageMoneyByMap = { "GrassBlocks", "GoldenBlocks", "DiamondBlocks" }
 
 local ConfigData = {
-    [TabList[1]] = { -- Tab Khối Nguyên Sinh
+    { -- Index 1
+        tabID = TabList[1],
         prices = {"20", "40", "90"},
         counts = {"1000", "2000", "5000"},
-        moneyByMapInShop = {4097, 4098, 4099},
-        moneyByMapName = "Khối Nguyên Sinh",
-        moneyByGameName = "Đậu mini",
-        currencyIcon = IconMoneyByGame[3],
-        mapItemIcon = IconMoneyByMap[1],
-        storageKey = KeyStorageMoneyByMap[1]
+        items = {4097, 4098, 4099},
+        name = "Khối Nguyên Sinh",
+        currencyName = "Đậu mini",
+        currencyIcon = [[8_1062292351_1777621812]],
+        mapIcon = [[8_1062292351_1776178934]],
+        storage = KeyStorageMoneyByMap[1]
     },
-    [TabList[2]] = { -- Tab Khối Hổ Phách
+    { -- Index 2
+        tabID = TabList[2],
         prices = {"30", "60", "130"},
         counts = {"100", "200", "500"},
-        moneyByMapInShop = {4100, 4101, 4102},
-        moneyByMapName = "Khối Hổ Phách",
-        moneyByGameName = "Điểm mini",
-        currencyIcon = IconMoneyByGame[2],
-        mapItemIcon = IconMoneyByMap[2],
-        storageKey = KeyStorageMoneyByMap[2]
+        items = {4100, 4101, 4102},
+        name = "Khối Hổ Phách",
+        currencyName = "Điểm mini",
+        currencyIcon = [[8_1062292351_1777619814]],
+        mapIcon = [[8_1062292351_1776178946]],
+        storage = KeyStorageMoneyByMap[2]
     },
-    [TabList[3]] = { -- Tab Khối Lam Ngọc
+    { -- Index 3
+        tabID = TabList[3],
         prices = {"50", "100", "250"},
         counts = {"10", "20", "50"},
-        moneyByMapInShop = {4103, 4105, 4106},
-        moneyByMapName = "Khối Lam Ngọc",
-        moneyByGameName = "Xu mini",
-        currencyIcon = IconMoneyByGame[1],
-        mapItemIcon = IconMoneyByMap[3],
-        storageKey = KeyStorageMoneyByMap[3]
+        items = {4103, 4105, 4106},
+        name = "Khối Lam Ngọc",
+        currencyName = "Xu mini",
+        currencyIcon = [[8_1062292351_1777619810]],
+        mapIcon = [[8_1062292351_1776178950]],
+        storage = KeyStorageMoneyByMap[3]
     }
 }
 
--- Hàm cập nhật giao diện khi chuyển Tab
-local function updateUIByTab(playerid, tabElementID)
-    local data = ConfigData[tabElementID]
+-- BẢNG TRA CỨU NHANH
+-- Giúp tìm thông tin gói chỉ bằng ItemID trong 0.001ms
+local ItemLookup = {}
+for tabIdx, data in ipairs(ConfigData) do
+    for pkgIdx, itemID in ipairs(data.items) do
+        ItemLookup[itemID] = {
+            count = tonumber(data.counts[pkgIdx]),
+            price = tonumber(data.prices[pkgIdx]),
+            storage = data.storage,
+            name = data.name,
+            currency = data.currencyName
+        }
+    end
+end
+
+local PlayerCurrentTabIdx = {}
+
+
+-- 2. CORE FUNCTIONS
+local function updateUIByTab(playerid, tabIdx)
+    local data = ConfigData[tabIdx]
     if not data then return end
-    PlayerCurrentTab[playerid] = tabElementID
+    PlayerCurrentTabIdx[playerid] = tabIdx
 
     for i = 1, 3 do
         Customui:setTexture(playerid, UIID, MoneyTypeList[i], data.currencyIcon)
         Customui:setText(playerid, UIID, PriceList[i], data.prices[i])
         Customui:setText(playerid, UIID, ReciveItemCountList[i], data.counts[i])
+    end
 
-        for j = 1, #IconMoneyList do
-            Customui:setTexture(playerid, UIID, IconMoneyList[j], data.mapItemIcon)
-        end
+    for _, iconElement in ipairs(IconMoneyList) do
+        Customui:setTexture(playerid, UIID, iconElement, data.mapIcon)
     end
 end
 
--- Xử lý sự kiện hỗ trợ
-local function helperEvent(event)
-    local playerid = event.eventobjid
-    local elementid = event.uielement
+local function updateDisplayMoneyCard(playerid, specificIdx)
+    local range = specificIdx and {specificIdx} or {1, 2, 3}
+    for _, i in ipairs(range) do
+        local _, value = VarLib2:getPlayerVarByName(playerid, VARTYPE.NUMBER, KeyStorageMoneyByMap[i])
+        Customui:setText(playerid, UIID, MoneyByMapCard[i], value or 0)
+    end
+end
 
-    -- Đóng giao diện
+-- ==========================================
+-- 3. EVENTS
+-- ==========================================
+
+local function helperEvent(event)
+    local playerid, elementid = event.eventobjid, event.uielement
+
     if elementid == CloseThisUI then
         Customui:hideElement(playerid, UIID, MainElement)
         return
     end
 
-    -- Chuyển Tab
-    for _, tabID in ipairs(TabList) do
+    -- Check nút mở nạp
+    if OpenBtnToTabIndex[elementid] then
+        updateUIByTab(playerid, OpenBtnToTabIndex[elementid])
+        Customui:showElement(playerid, UIID, MainElement)
+        return
+    end
+
+    -- Check chuyển Tab
+    for idx, tabID in ipairs(TabList) do
         if elementid == tabID then
-            updateUIByTab(playerid, elementid)
+            updateUIByTab(playerid, idx)
             return
         end
     end
 
-    -- Click nút mở nạp
-    for i, openID in ipairs(OpenTabByMoneyType) do
-        if elementid == openID then
-            updateUIByTab(event.eventobjid, TabList[i])
-            Customui:showElement(playerid, UIID, MainElement)
-            return
-        end
-    end
-
-    -- Click vào gói
+    -- Check click vào gói
     for i, pkgID in ipairs(PackageList) do
         if elementid == pkgID then
-            local currentTab = PlayerCurrentTab[playerid] or TabList[1]
-            local itemid = ConfigData[currentTab].moneyByMapInShop[i]
+            local currentIdx = PlayerCurrentTabIdx[playerid] or 1
+            local itemid = ConfigData[currentIdx].items[i]
             local _, itemName = Item:getItemName(itemid)
-
-            Player:openDevGoodsBuyDialog(playerid, itemid, "Bạn sẽ mua " .. itemName .. " chứ?")
+            Player:openDevGoodsBuyDialog(playerid, itemid, "Xác nhận mua " .. itemName .. "?")
             return
         end
     end
 end
 
--- Cập nhật hiển thị
-local function updateDisplayMoneyCard(playerid)
-    for i = 1, #MoneyByMapCard do
-        local _, value = VarLib2:getPlayerVarByName(playerid, VARTYPE.NUMBER, KeyStorageMoneyByMap[i])
-        Customui:setText(playerid, UIID, MoneyByMapCard[i], value)
-    end
-end
+local function onPurchaseSuccess(event)
+    local info = ItemLookup[event.itemid]
+    if not info then return end
 
-
--- Xử lý khi thanh toán thành công
--- Xử lý khi thanh toán thành công
-local function transferMoneyByMapToPlayer(event)
     local playerid = event.eventobjid
-    local itemid = event.itemid
+    local _, value = VarLib2:getPlayerVarByName(playerid, VARTYPE.NUMBER, info.storage)
+    value = (value or 0) + info.count
 
-    for tabID, data in pairs(ConfigData) do
-        for i, configItemID in ipairs(data.moneyByMapInShop) do
-            if configItemID == itemid then
-                local count = tonumber(data.counts[i])
-                local price = tonumber(data.prices[i])
+    VarLib2:setPlayerVarByName(playerid, VARTYPE.NUMBER, info.storage, value)
+    updateDisplayMoneyCard(playerid)
 
-                local varName = data.storageKey
-                local _, value = VarLib2:getPlayerVarByName(playerid, VARTYPE.NUMBER, varName)
-                if not value then value = 0 end
-
-                value = value + count
-                VarLib2:setPlayerVarByName(playerid, VARTYPE.NUMBER, varName, value)
-                updateDisplayMoneyCard(playerid)
-                Chat:sendSystemMsg("#GĐã nạp thành công " .. count .. " " .. data.moneyByMapName, playerid)
-                Chat:sendSystemMsg("#YThanh toán: " .. price .. " " .. data.moneyByGameName, playerid)
-                return
-            end
-        end
-    end
+    Chat:sendSystemMsg(string.format("#G[Nạp gói] Thành công! +%d %s", info.count, info.name), playerid)
+    Chat:sendSystemMsg(string.format("#Y[Thanh toán] -%d %s", info.price, info.currency), playerid)
 end
 
-local function initData(event)
-    updateUIByTab(event.eventobjid, TabList[1])
-    updateDisplayMoneyCard(event.eventobjid)
-end
+
+ScriptSupportEvent:registerEvent("Game.AnyPlayer.EnterGame", function(e)
+    updateUIByTab(e.eventobjid, 1)
+    updateDisplayMoneyCard(e.eventobjid)
+end)
 ScriptSupportEvent:registerEvent("UI.Button.Click", helperEvent)
-ScriptSupportEvent:registerEvent("Developer.BuyItem", transferMoneyByMapToPlayer)
-ScriptSupportEvent:registerEvent("Game.AnyPlayer.EnterGame", initData)
+ScriptSupportEvent:registerEvent("Developer.BuyItem", onPurchaseSuccess)
