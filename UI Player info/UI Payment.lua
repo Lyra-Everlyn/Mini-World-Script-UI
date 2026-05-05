@@ -56,21 +56,27 @@ local ConfigData = {
     [TabList[1]] = { -- Tab Khối Nguyên Sinh
         prices = {"20", "40", "90"},
         counts = {"1000", "2000", "5000"},
-        moneyByMapInShop = {1, 2, 3},      -- Itemid thực tế trong map
+        moneyByMapInShop = {4097, 4098, 4099},      -- Itemid thực tế trong map
+        moneyByMapName = "Khối Nguyên Sinh",
+        moneyByGameName = "Đậu mini",
         currencyIcon = IconMoneyByGame[3], -- Đậu mini (Xanh lá)
         mapItemIcon = IconMoneyByMap[1]    -- Đường dẫn ảnh Khối Nguyên Sinh
     },
     [TabList[2]] = { -- Tab Khối Hổ Phách
-        prices = {"30", "60", "120"},
+        prices = {"30", "60", "130"},
         counts = {"100", "200", "500"},
-        moneyByMapInShop = {4, 5, 6},
+        moneyByMapInShop = {4100, 4101, 4102},
+        moneyByMapName = "Khối Hổ Phách",
+        moneyByGameName = "Điểm mini",
         currencyIcon = IconMoneyByGame[2], -- Điểm mini (Xanh dương)
         mapItemIcon = IconMoneyByMap[2]    -- Đường dẫn ảnh Khối Hổ Phách
     },
     [TabList[3]] = { -- Tab Khối Lam Ngọc
         prices = {"50", "100", "250"},
         counts = {"10", "20", "50"},
-        moneyByMapInShop = {7, 8, 9},
+        moneyByMapInShop = {4103, 4105, 4106},
+        moneyByMapName = "Khối Lam Ngọc",
+        moneyByGameName = "Xu mini",
         currencyIcon = IconMoneyByGame[1], -- Xu mini (Vàng)
         mapItemIcon = IconMoneyByMap[3]    -- Đường dẫn ảnh Khối Lam Ngọc
     }
@@ -116,8 +122,9 @@ local function OnButtonClick(event)
         if elementid == pkgID then
             local currentTab = PlayerCurrentTab[playerid] or TabList[1]
             local itemid = ConfigData[currentTab].moneyByMapInShop[i]
+            local _, itemName = Item:getItemName(itemid)
 
-            -- Gọi cửa sổ thanh toán của Mini World (Dùng cho Developer Item)
+            Player:openDevGoodsBuyDialog(playerid, itemid, "Bạn sẽ mua " .. itemName .. " chứ?")
             return
         end
     end
@@ -126,7 +133,8 @@ end
 -- Xử lý khi thanh toán thành công
 local function transferMoneyByMapToPlayer(event)
     local playerid = event.eventobjid
-    local itemid = event.itemid -- ID vật phẩm Dev vừa mua
+    local itemid = event.itemid
+    local _, itemName = Item:getItemName(itemid)
 
     -- Duyệt qua ConfigData để tìm xem itemid này tương ứng với gói nào
     for tabID, data in pairs(ConfigData) do
@@ -135,8 +143,8 @@ local function transferMoneyByMapToPlayer(event)
                 local count = tonumber(data.counts[i])
                 local price = tonumber(data.prices[i])
 
-                -- Chat:sendSystemMsg(playerid, "Bạn đã mua thành công và nhận được: " .. count)
-
+                Chat:sendSystemMsg("Đã nạp thành công " .. count .. " " .. data.moneyByMapName .. " vào tài khoản của bạn!", playerid)
+                Chat:sendSystemMsg("Cảm ơn bạn ủng hộ " .. price .. " " .. data.moneyByGameName .. "!", playerid)
                 return
             end
         end
@@ -144,7 +152,7 @@ local function transferMoneyByMapToPlayer(event)
 end
 
 -- Đăng ký sự kiện
-ScriptSupportEvent:registerEvent([=[UI.Button.Click]=], OnButtonClick)
+ScriptSupportEvent:registerEvent("UI.Button.Click", OnButtonClick)
 ScriptSupportEvent:registerEvent("Developer.BuyItem", transferMoneyByMapToPlayer)
 ScriptSupportEvent:registerEvent("Game.AnyPlayer.EnterGame", function(event)
     updateUIByTab(event.eventobjid, TabList[1])
