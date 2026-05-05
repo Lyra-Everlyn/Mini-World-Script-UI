@@ -4,7 +4,7 @@ local FrameID = UIID .. "_3"
 local BoxNameID = UIID .. "_54"
 local BoxIdID = UIID .. "_56"
 
-function setPlayerAvatar(event)
+local function setPlayerAvatar(event)
     local playerid = event.eventobjid
     local _, avatar = Customui:getRoleIcon(playerid)
     local _, name = Player:getNickname(playerid)
