@@ -50,6 +50,7 @@ local CloseThisUI = "7483275955022154623_78"
 local MainElement = "7483275955022154623_69"
 local UIID = "7483275955022154623"
 
+local PlayerCurrentTab = {} -- Biến riêng lưu tab hiện tại
 
 local ConfigData = {
     [TabList[1]] = { -- Tab Khối Nguyên Sinh
@@ -75,25 +76,24 @@ local ConfigData = {
     }
 }
 
--- 2. Hàm cập nhật giao diện khi chuyển Tab
+-- Hàm cập nhật giao diện khi chuyển Tab
 local function updateUIByTab(playerid, tabElementID)
     local data = ConfigData[tabElementID]
     if not data then return end
+    PlayerCurrentTab[playerid] = tabElementID
 
     for i = 1, 3 do
         Customui:setTexture(playerid, UIID, MoneyTypeList[i], data.currencyIcon)
         Customui:setText(playerid, UIID, PriceList[i], data.prices[i])
         Customui:setText(playerid, UIID, ReciveItemCountList[i], data.counts[i])
 
-        threadpool:work(function ()
-            for j = 1, #IconMoneyList do
-                Customui:setTexture(playerid, UIID, IconMoneyList[j], data.mapItemIcon)
-            end
-        end)
+        for j = 1, #IconMoneyList do
+            Customui:setTexture(playerid, UIID, IconMoneyList[j], data.mapItemIcon)
+        end
     end
 end
 
--- 3. Xử lý sự kiện Click
+-- Xử lý sự kiện Click
 local function OnButtonClick(event)
     local playerid = event.eventobjid
     local elementid = event.uielement
@@ -103,6 +103,7 @@ local function OnButtonClick(event)
         return
     end
 
+    -- Chuyển Tab
     for _, tabID in ipairs(TabList) do
         if elementid == tabID then
             updateUIByTab(playerid, elementid)
@@ -110,27 +111,41 @@ local function OnButtonClick(event)
         end
     end
 
-    -- Kiểm tra nếu click vào Gói để mua
+    -- Xử lý Mua Gói
     for i, pkgID in ipairs(PackageList) do
         if elementid == pkgID then
-            local itemid = ConfigData[TabList[i]].moneyByMapInShop[i]
+            local currentTab = PlayerCurrentTab[playerid] or TabList[1]
+            local itemid = ConfigData[currentTab].moneyByMapInShop[i]
 
-            -- Mở cửa sổ mời mua item
+            -- Gọi cửa sổ thanh toán của Mini World (Dùng cho Developer Item)
             return
         end
     end
 end
 
-
+-- Xử lý khi thanh toán thành công
 local function transferMoneyByMapToPlayer(event)
     local playerid = event.eventobjid
-    local itemid = event.itemid
+    local itemid = event.itemid -- ID vật phẩm Dev vừa mua
 
-    --if  then
-        -- Logic chuyển tiền
-    --end
+    -- Duyệt qua ConfigData để tìm xem itemid này tương ứng với gói nào
+    for tabID, data in pairs(ConfigData) do
+        for i, configItemID in ipairs(data.moneyByMapInShop) do
+            if configItemID == itemid then
+                local count = tonumber(data.counts[i])
+                local price = tonumber(data.prices[i])
+
+                -- Chat:sendSystemMsg(playerid, "Bạn đã mua thành công và nhận được: " .. count)
+
+                return
+            end
+        end
+    end
 end
 
+-- Đăng ký sự kiện
 ScriptSupportEvent:registerEvent([=[UI.Button.Click]=], OnButtonClick)
 ScriptSupportEvent:registerEvent("Developer.BuyItem", transferMoneyByMapToPlayer)
-ScriptSupportEvent:registerEvent("Game.AnyPlayer.EnterGame", function(event) updateUIByTab(event.eventobjid, TabList[1]) end)
+ScriptSupportEvent:registerEvent("Game.AnyPlayer.EnterGame", function(event)
+    updateUIByTab(event.eventobjid, TabList[1])
+end)
