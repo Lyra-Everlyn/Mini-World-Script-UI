@@ -51,23 +51,25 @@ local MainElement = "7483275955022154623_69"
 local UIID = "7483275955022154623"
 
 
--- 1. Bảng ConfigData: Chuyển itemIcons từ Element ID sang Đường dẫn ảnh (Texture)
 local ConfigData = {
     [TabList[1]] = { -- Tab Khối Nguyên Sinh
         prices = {"20", "40", "90"},
         counts = {"1000", "2000", "5000"},
+        moneyByMapInShop = {1, 2, 3},      -- Itemid thực tế trong map
         currencyIcon = IconMoneyByGame[3], -- Đậu mini (Xanh lá)
         mapItemIcon = IconMoneyByMap[1]    -- Đường dẫn ảnh Khối Nguyên Sinh
     },
     [TabList[2]] = { -- Tab Khối Hổ Phách
         prices = {"30", "60", "120"},
         counts = {"100", "200", "500"},
+        moneyByMapInShop = {4, 5, 6},
         currencyIcon = IconMoneyByGame[2], -- Điểm mini (Xanh dương)
         mapItemIcon = IconMoneyByMap[2]    -- Đường dẫn ảnh Khối Hổ Phách
     },
     [TabList[3]] = { -- Tab Khối Lam Ngọc
         prices = {"50", "100", "250"},
         counts = {"10", "20", "50"},
+        moneyByMapInShop = {7, 8, 9},
         currencyIcon = IconMoneyByGame[1], -- Xu mini (Vàng)
         mapItemIcon = IconMoneyByMap[3]    -- Đường dẫn ảnh Khối Lam Ngọc
     }
@@ -78,19 +80,11 @@ local function updateUIByTab(playerid, tabElementID)
     local data = ConfigData[tabElementID]
     if not data then return end
 
-    -- Lặp qua 3 gói (Pack) hiển thị trên giao diện
     for i = 1, 3 do
-        -- A. Đổi Biểu tượng loại tiền thanh toán (Xu/Điểm/Đậu)
         Customui:setTexture(playerid, UIID, MoneyTypeList[i], data.currencyIcon)
-        
-        -- B. Đổi Giá tiền (Text)
         Customui:setText(playerid, UIID, PriceList[i], data.prices[i])
-        
-        -- C. Đổi Số lượng nhận được (Text)
         Customui:setText(playerid, UIID, ReciveItemCountList[i], data.counts[i])
-        
-        -- D. QUAN TRỌNG: Đổi hình ảnh icon vật phẩm trên gói
-        -- Sử dụng IconMoneyList[1], [2], [3] làm ID các ô chứa ảnh trên UI
+
         threadpool:work(function ()
             for j = 1, #IconMoneyList do
                 Customui:setTexture(playerid, UIID, IconMoneyList[j], data.mapItemIcon)
@@ -103,52 +97,40 @@ end
 local function OnButtonClick(event)
     local playerid = event.eventobjid
     local elementid = event.uielement
-    
     -- Đóng giao diện
     if elementid == CloseThisUI then
         Customui:hideElement(playerid, UIID, MainElement)
         return
     end
 
-    -- Kiểm tra nếu click vào Tab để chuyển đổi
     for _, tabID in ipairs(TabList) do
         if elementid == tabID then
             updateUIByTab(playerid, elementid)
             return
         end
     end
-    
+
     -- Kiểm tra nếu click vào Gói để mua
     for i, pkgID in ipairs(PackageList) do
         if elementid == pkgID then
-            -- Chat:sendSystemMsg("Bạn đang nạp gói " .. i .. " của tab hiện tại!", playerid)
-            
-            -- Logic xử lí nạp
+            local itemid = ConfigData[TabList[i]].moneyByMapInShop[i]
+
+            -- Mở cửa sổ mời mua item
             return
         end
     end
 end
 
--- 4. Đăng ký sự kiện và thiết lập mặc định
-ScriptSupportEvent:registerEvent([=[UI.Button.Click]=], OnButtonClick)
 
--- Hàm này gọi khi bạn muốn mở UI (ví dụ từ một sự kiện khác)
--- Mặc định hiển thị Tab 1 (Khối nguyên sinh)
-local function openDefaultUI(playerid)
-    Customui:showElement(playerid, UIID, MainElement)
-    updateUIByTab(playerid, TabList[1])
-end
-
-local MoneyByMapInShop = {
-    -- Item trong shop
-}
 local function transferMoneyByMapToPlayer(event)
     local playerid = event.eventobjid
     local itemid = event.itemid
 
-    if MoneyByMapInShop[itemid] then
-        -- Thêm logic xử lý chuyển tiền tại đây
-    end
+    --if  then
+        -- Logic chuyển tiền
+    --end
 end
 
+ScriptSupportEvent:registerEvent([=[UI.Button.Click]=], OnButtonClick)
 ScriptSupportEvent:registerEvent("Developer.BuyItem", transferMoneyByMapToPlayer)
+ScriptSupportEvent:registerEvent("Game.AnyPlayer.EnterGame", function(event) updateUIByTab(event.eventobjid, TabList[1]) end)
