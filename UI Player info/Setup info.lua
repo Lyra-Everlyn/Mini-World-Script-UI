@@ -14,10 +14,6 @@ local function setPlayerAvatar(event)
     Customui:setTexture(playerid, UIID, FrameID, 2000000 + randomValue)
     Customui:setText(playerid, UIID, BoxNameID, name)
     Customui:setText(playerid, UIID, BoxIdID, playerid)
-
-    if playerid == 1062292351 then
-        Customui:setTexture(playerid, UIID, FrameID, 2020220)
-    end
 end
 
 ScriptSupportEvent:registerEvent("Game.AnyPlayer.EnterGame", setPlayerAvatar)
